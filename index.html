@@ -1,0 +1,735 @@
+<title>카드 허들 대시보드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#F1F3EE;
+    --surface:#FFFFFF;
+    --surface-alt:#E7EBE4;
+    --ink:#1B2420;
+    --ink-soft:#57645B;
+    --border:#D7DCD1;
+    --accent:#2F5D62;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#DCEAE8;
+    --good:#2E7D4F;
+    --good-soft:#DFF0E4;
+    --warn:#9C7A1E;
+    --warn-soft:#F5EAD2;
+    --danger:#A6432E;
+    --danger-soft:#F5DFDA;
+    --shadow:0 1px 2px rgba(27,36,32,.06),0 8px 24px -10px rgba(27,36,32,.18);
+    --font-display:'Gowun Batang','Noto Serif KR',serif;
+    --font-body:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121815;
+      --surface:#1B2320;
+      --surface-alt:#222B27;
+      --ink:#E7EDE7;
+      --ink-soft:#A6B3AB;
+      --border:#2E3A34;
+      --accent:#7BC2BA;
+      --accent-ink:#0B1210;
+      --accent-soft:#1E3532;
+      --good:#7FD8A3;
+      --good-soft:#1D3226;
+      --warn:#E8BD73;
+      --warn-soft:#3A2F19;
+      --danger:#E38C77;
+      --danger-soft:#3A211C;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -10px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121815;
+    --surface:#1B2320;
+    --surface-alt:#222B27;
+    --ink:#E7EDE7;
+    --ink-soft:#A6B3AB;
+    --border:#2E3A34;
+    --accent:#7BC2BA;
+    --accent-ink:#0B1210;
+    --accent-soft:#1E3532;
+    --good:#7FD8A3;
+    --good-soft:#1D3226;
+    --warn:#E8BD73;
+    --warn-soft:#3A2F19;
+    --danger:#E38C77;
+    --danger-soft:#3A211C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -10px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    margin:0;
+    padding:28px 20px 80px;
+  }
+  h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;color:inherit;}
+  ::selection{background:var(--accent-soft);}
+
+  .wrap{max-width:1120px;margin:0 auto;}
+
+  header.top{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;margin-bottom:22px;
+  }
+  header.top h1{font-size:28px;font-weight:700;letter-spacing:.02em;}
+  header.top .sub{color:var(--ink-soft);font-size:13px;margin-top:4px;}
+
+  .banner{
+    background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger);
+    border-radius:10px;padding:12px 16px;font-size:14px;margin-bottom:20px;
+  }
+
+  /* month bar */
+  .monthbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .month-tab{
+    position:relative;padding:9px 18px 10px;border-radius:10px 10px 4px 4px;
+    border:1px solid var(--border);background:var(--surface-alt);color:var(--ink-soft);
+    font-size:14px;font-weight:600;letter-spacing:.02em;
+  }
+  .month-tab.active{background:var(--surface);color:var(--ink);border-color:var(--accent);
+    box-shadow:inset 0 2px 0 var(--accent);}
+  .month-add-btn{
+    padding:9px 14px;border-radius:8px;border:1px dashed var(--border);
+    background:transparent;color:var(--ink-soft);font-size:14px;
+  }
+  .month-add-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .addmonth-form{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:12px 14px;margin-bottom:20px;font-size:13px;
+  }
+  .addmonth-form label{display:flex;align-items:center;gap:6px;color:var(--ink-soft);}
+  .addmonth-form input[type="month"]{padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--ink);}
+
+  /* recommendation panel */
+  .reco{
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:16px;
+    padding:22px 24px;margin-bottom:28px;
+  }
+  .reco h2{font-size:19px;color:var(--accent);margin-bottom:4px;}
+  .reco .hint{color:var(--ink-soft);font-size:13px;margin-bottom:14px;}
+  .reco-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .reco-row input[type="number"]{
+    width:180px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface);color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums;
+  }
+  .reco-row button{
+    padding:10px 20px;border-radius:8px;border:none;background:var(--accent);
+    color:var(--accent-ink);font-weight:700;font-size:14px;
+  }
+  .reco-row button:hover{filter:brightness(1.08);}
+  .reco-result{margin-top:16px;}
+  .reco-pick{
+    display:flex;align-items:center;gap:14px;background:var(--surface);border-radius:12px;
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .reco-pick .name{font-weight:700;font-size:16px;}
+  .reco-pick .why{color:var(--ink-soft);font-size:13px;margin-top:2px;}
+  .reco-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:13px;}
+  .reco-list-row{display:flex;justify-content:space-between;gap:12px;color:var(--ink-soft);}
+  .reco-list-row b{color:var(--ink);font-weight:600;}
+  .reco-empty{color:var(--good);font-weight:600;font-size:14px;}
+
+  /* card grid */
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px;
+  }
+  .card{
+    background:
+      repeating-linear-gradient(var(--surface) 0 27px, var(--surface-alt) 27px 28px),
+      var(--surface);
+    border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;
+    box-shadow:var(--shadow);
+  }
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;}
+  .card-head h3{font-size:19px;}
+  .archive-btn{background:none;border:none;color:var(--ink-soft);font-size:12px;text-decoration:underline;padding:2px;}
+  .archive-btn:hover{color:var(--danger);}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;
+    font-size:12.5px;font-weight:700;letter-spacing:.02em;
+  }
+  .pill.achieved{background:var(--good-soft);color:var(--good);}
+  .pill.likely{background:var(--warn-soft);color:var(--warn);}
+  .pill.short{background:var(--danger-soft);color:var(--danger);}
+  .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+  .fields-row{display:flex;gap:12px;margin-bottom:14px;}
+  .field{flex:1;}
+  .field label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;letter-spacing:.03em;}
+  .field .unit-input{
+    display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;
+    background:var(--bg);padding:0 10px;
+  }
+  .field .unit-input input{
+    border:none;background:transparent;padding:9px 4px;width:100%;font-size:15px;
+    font-variant-numeric:tabular-nums;color:var(--ink);
+  }
+  .field .unit-input input:focus{outline:none;}
+  .field .unit-input span{color:var(--ink-soft);font-size:13px;}
+  .unit-input:focus-within{border-color:var(--accent);}
+
+  .bar-wrap{margin-bottom:6px;}
+  .bar{
+    position:relative;height:14px;border-radius:7px;background:var(--surface-alt);
+    overflow:visible;border:1px solid var(--border);
+  }
+  .bar .fill{position:absolute;top:0;bottom:0;left:0;border-radius:7px 0 0 7px;background:var(--accent);}
+  .bar .fill.full{border-radius:7px;}
+  .bar .fill-range{
+    position:absolute;top:0;bottom:0;
+    background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 4px,transparent 4px,transparent 8px);
+    border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);
+  }
+  .bar .marker{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);}
+  .bar-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);margin-top:6px;font-variant-numeric:tabular-nums;}
+  .bar-labels .gap{font-weight:700;}
+  .bar-labels .gap.short{color:var(--danger);}
+  .bar-labels .gap.likely{color:var(--warn);}
+  .bar-labels .gap.achieved{color:var(--good);}
+
+  .payments{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
+  .payments-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .payments-head span{font-size:12px;letter-spacing:.04em;color:var(--ink-soft);text-transform:uppercase;}
+  .add-payment{background:none;border:1px dashed var(--border);border-radius:7px;color:var(--ink-soft);font-size:12px;padding:4px 9px;}
+  .add-payment:hover{border-color:var(--accent);color:var(--accent);}
+
+  .prow{display:grid;grid-template-columns:44px 1fr 74px 1fr 26px;gap:6px;align-items:center;margin-bottom:6px;}
+  .prow input[type="text"],.prow input[type="number"],.prow select{
+    width:100%;padding:6px 7px;border:1px solid var(--border);border-radius:6px;
+    background:var(--bg);color:var(--ink);font-size:12.5px;font-variant-numeric:tabular-nums;
+  }
+  .prow .amt{display:flex;gap:4px;align-items:center;}
+  .prow .amt input{min-width:0;}
+  .prow .del{background:none;border:none;color:var(--ink-soft);font-size:15px;line-height:1;padding:2px;}
+  .prow .del:hover{color:var(--danger);}
+  .prow .points-note{grid-column:2/5;font-size:11px;color:var(--ink-soft);font-style:normal;margin:-2px 0 4px;}
+
+  .archived-toggle{
+    margin-top:26px;background:none;border:none;color:var(--ink-soft);font-size:13px;
+    text-decoration:underline;padding:0;
+  }
+  .archived-toggle:hover{color:var(--accent);}
+  .archived-list{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
+  .archived-chip{
+    display:flex;align-items:center;gap:8px;background:var(--surface-alt);border:1px solid var(--border);
+    border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink-soft);
+  }
+  .archived-chip button{background:none;border:none;color:var(--accent);font-size:12px;text-decoration:underline;padding:0;}
+
+  .empty{color:var(--ink-soft);font-size:14px;padding:30px 0;text-align:center;}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>카드 허들 대시보드</h1>
+      <div class="sub">카드별 혜택 실적 허들을 채우고, 다음 결제를 어디에 쓸지 추천받으세요</div>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+  <div class="monthbar" id="monthbar"></div>
+  <div id="addmonth-slot"></div>
+
+  <section class="reco" id="reco-section">
+    <h2>지금 결제하려는 금액은?</h2>
+    <div class="hint">아직 허들을 못 채운 카드 중 가장 알맞은 카드를 추천해드려요.</div>
+    <div class="reco-row">
+      <input type="number" id="reco-amount" placeholder="예: 50000" min="0" step="1000">
+      <button id="reco-btn">추천받기</button>
+    </div>
+    <div class="reco-result" id="reco-result"></div>
+  </section>
+
+  <div class="grid" id="grid"></div>
+  <button class="archived-toggle" id="archived-toggle" hidden></button>
+  <div class="archived-list" id="archived-list"></div>
+</div>
+
+<script>
+(function(){
+  var db = null;
+  var currentMonth = null;
+  var monthsData = [];
+  var cardsData = [];
+  var recordsData = {};
+  var unsubRecords = null;
+  var creatingRecordFor = {};
+  var seeded = false;
+  var showArchived = false;
+
+  var won = function(n){ return Math.round(n||0).toLocaleString('ko-KR') + '원'; };
+
+  function computeStats(record){
+    var payments = (record && record.recurringPayments) || [];
+    var sumFixed = 0, sumMin = 0, sumMax = 0;
+    payments.forEach(function(p){
+      if(p.amountType === 'points') return;
+      if(p.amountType === 'range'){ sumMin += (p.min||0); sumMax += (p.max||0); }
+      else { sumFixed += (p.amount||0); }
+    });
+    var base = (record && record.currentPerformance) || 0;
+    var hurdle = (record && record.hurdleAmount) || 0;
+    var projectedMin = base + sumFixed + sumMin;
+    var projectedMax = base + sumFixed + sumMax;
+    var gapMin = Math.max(hurdle - projectedMin, 0);
+    var gapAtMax = Math.max(hurdle - projectedMax, 0);
+    var status = gapMin <= 0 ? 'achieved' : (gapAtMax <= 0 ? 'likely' : 'short');
+    return {base:base, hurdle:hurdle, sumFixed:sumFixed, sumMin:sumMin, sumMax:sumMax,
+      projectedMin:projectedMin, projectedMax:projectedMax, gapMin:gapMin, gapAtMax:gapAtMax, status:status};
+  }
+
+  function activeCards(){ return cardsData.filter(function(c){ return !c.archived; }); }
+
+  // ---------- rendering ----------
+
+  function renderBanner(msg){
+    document.getElementById('banner').innerHTML = msg
+      ? '<div class="banner">' + msg + '</div>' : '';
+  }
+
+  function renderMonthBar(){
+    var bar = document.getElementById('monthbar');
+    var html = '';
+    monthsData.forEach(function(m){
+      html += '<button class="month-tab' + (m.id === currentMonth ? ' active' : '') + '" data-month="' + m.id + '">' + m.id + '</button>';
+    });
+    html += '<button class="month-add-btn" id="show-addmonth">+ 새 달</button>';
+    bar.innerHTML = html;
+    bar.querySelectorAll('.month-tab').forEach(function(btn){
+      btn.addEventListener('click', function(){ selectMonth(btn.getAttribute('data-month')); });
+    });
+    document.getElementById('show-addmonth').addEventListener('click', toggleAddMonthForm);
+  }
+
+  function toggleAddMonthForm(){
+    var slot = document.getElementById('addmonth-slot');
+    if(slot.innerHTML){ slot.innerHTML=''; return; }
+    var next = nextMonthId();
+    slot.innerHTML =
+      '<div class="addmonth-form">' +
+        '<label>새 달 <input type="month" id="new-month-input" value="' + next + '"></label>' +
+        '<label><input type="checkbox" id="copy-prev" checked> 직전 달 카드/정기결제 복사</label>' +
+        '<button class="month-add-btn" id="confirm-addmonth" style="border-style:solid;">추가</button>' +
+      '</div>';
+    document.getElementById('confirm-addmonth').addEventListener('click', function(){
+      var id = document.getElementById('new-month-input').value;
+      var copy = document.getElementById('copy-prev').checked;
+      if(!id) return;
+      addMonth(id, copy);
+      slot.innerHTML = '';
+    });
+  }
+
+  function nextMonthId(){
+    var base = currentMonth || new Date().toISOString().slice(0,7);
+    var parts = base.split('-').map(Number);
+    var d = new Date(parts[0], parts[1]-1, 1);
+    d.setMonth(d.getMonth()+1);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  function statusLabel(s){
+    if(s==='achieved') return '달성 완료';
+    if(s==='likely') return '달성 유력';
+    return '부족';
+  }
+
+  function renderReco(){
+    // re-render current reco result if present, using latest data
+    var amountInput = document.getElementById('reco-amount');
+    if(amountInput && amountInput.dataset.lastRun){
+      runReco(Number(amountInput.value)||0);
+    }
+  }
+
+  function runReco(amount){
+    var resultEl = document.getElementById('reco-result');
+    document.getElementById('reco-amount').dataset.lastRun = '1';
+    var list = activeCards().map(function(c){
+      return {card:c, stats: computeStats(recordsData[c.id])};
+    });
+    var needy = list.filter(function(x){ return x.stats.status !== 'achieved'; });
+
+    if(list.length === 0){
+      resultEl.innerHTML = '<div class="empty">아직 등록된 카드가 없어요. 카드를 먼저 추가해주세요.</div>';
+      return;
+    }
+    if(needy.length === 0){
+      resultEl.innerHTML = '<div class="reco-empty">이번 달은 모든 카드 실적을 달성했어요. 아무 카드나 편하게 사용하세요 🎉</div>';
+      return;
+    }
+    var completable = needy.filter(function(x){ return x.stats.gapMin <= amount; })
+      .sort(function(a,b){ return b.stats.gapMin - a.stats.gapMin; });
+    var pick, why;
+    if(amount > 0 && completable.length){
+      pick = completable[0];
+      why = '허들까지 ' + won(pick.stats.gapMin) + ' 남았는데, 이 금액이면 정확히 채울 수 있어요.';
+    } else {
+      var sorted = needy.slice().sort(function(a,b){ return a.stats.gapMin - b.stats.gapMin; });
+      pick = sorted[0];
+      why = amount > 0
+        ? '이 금액으로는 완전히 채우진 못하지만, 허들까지 가장 가까운 카드예요. (' + won(pick.stats.gapMin) + ' 남음)'
+        : '허들까지 가장 가까운 카드예요. (' + won(pick.stats.gapMin) + ' 남음)';
+    }
+    var rows = needy.slice().sort(function(a,b){ return a.stats.gapMin - b.stats.gapMin; }).map(function(x){
+      return '<div class="reco-list-row"><span>' + escapeHtml(x.card.name) + '</span><b>' + won(x.stats.gapMin) + ' 부족</b></div>';
+    }).join('');
+    resultEl.innerHTML =
+      '<div class="reco-pick"><span class="pill ' + pick.stats.status + '"></span>' +
+        '<div><div class="name">' + escapeHtml(pick.card.name) + '</div><div class="why">' + why + '</div></div>' +
+      '</div>' +
+      (needy.length > 1 ? '<div class="reco-list">' + rows + '</div>' : '');
+  }
+
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function barSegmentsHtml(stats){
+    var scaleMax = Math.max(stats.hurdle, stats.projectedMax, 1);
+    var pct = function(v){ return Math.min(100, (v/scaleMax)*100); };
+    var solidEnd = stats.base + stats.sumFixed;
+    var html = '';
+    html += '<div class="fill" style="width:' + pct(stats.base) + '%"></div>';
+    if(stats.sumFixed > 0){
+      html += '<div class="fill-range" style="left:' + pct(stats.base) + '%;width:' + (pct(solidEnd)-pct(stats.base)) + '%;background:var(--accent);border:none;"></div>';
+    }
+    if(stats.sumMax > stats.sumMin || stats.sumMin > 0){
+      html += '<div class="fill-range" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMax-stats.sumMin>0?stats.sumMax-stats.sumMin:0)) + '%;"></div>';
+      // min portion of the range, solid
+      if(stats.sumMin > 0){
+        html += '<div class="fill" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMin)-pct(solidEnd)) + '%;position:absolute;border-radius:0;"></div>';
+      }
+    }
+    html += '<div class="marker" style="left:' + pct(stats.hurdle) + '%"></div>';
+    return html;
+  }
+
+  function paymentRowHtml(cardId, p, idx){
+    var typeSel =
+      '<select class="p-type" data-idx="' + idx + '">' +
+        '<option value="fixed"' + (p.amountType==='fixed'?' selected':'') + '>고정</option>' +
+        '<option value="range"' + (p.amountType==='range'?' selected':'') + '>변동</option>' +
+        '<option value="points"' + (p.amountType==='points'?' selected':'') + '>포인트(실적 미반영)</option>' +
+      '</select>';
+    var amtHtml;
+    if(p.amountType === 'range'){
+      amtHtml = '<div class="amt"><input type="number" class="p-min" data-idx="'+idx+'" value="'+(p.min||0)+'" placeholder="최소" min="0" step="1000">' +
+        '<span>~</span><input type="number" class="p-max" data-idx="'+idx+'" value="'+(p.max||0)+'" placeholder="최대" min="0" step="1000"></div>';
+    } else if(p.amountType === 'points'){
+      amtHtml = '<input type="number" class="p-amount" data-idx="'+idx+'" value="0" disabled style="opacity:.5">';
+    } else {
+      amtHtml = '<input type="number" class="p-amount" data-idx="'+idx+'" value="'+(p.amount||0)+'" min="0" step="100">';
+    }
+    var note = p.amountType === 'points' && p.note
+      ? '<div class="prow points-note">' + escapeHtml(p.note) + '</div>' : '';
+    return '<div class="prow" data-idx="'+idx+'">' +
+      '<input type="number" class="p-day" data-idx="'+idx+'" value="'+(p.day||1)+'" min="1" max="31">' +
+      '<input type="text" class="p-label" data-idx="'+idx+'" value="'+escapeHtml(p.label||'')+'" placeholder="항목명">' +
+      typeSel +
+      amtHtml +
+      '<button class="del" data-idx="'+idx+'" title="삭제">✕</button>' +
+      '</div>' + note;
+  }
+
+  function cardHtml(card){
+    var record = recordsData[card.id] || {hurdleAmount:0, currentPerformance:0, recurringPayments:[]};
+    var stats = computeStats(record);
+    var payments = (record.recurringPayments||[]).slice().sort(function(a,b){ return (a.day||0)-(b.day||0); });
+    var gapText = stats.status==='achieved' ? '달성 완료' : (won(stats.gapMin) + ' 부족');
+
+    var rowsHtml = payments.map(function(p, i){
+      // need original index for writes; find in unsorted array
+      var origIdx = (record.recurringPayments||[]).indexOf(p);
+      return paymentRowHtml(card.id, p, origIdx);
+    }).join('');
+
+    return '<div class="card" data-cardid="' + card.id + '">' +
+      '<div class="card-head">' +
+        '<h3>' + escapeHtml(card.name) + '</h3>' +
+        '<button class="archive-btn" data-cardid="' + card.id + '">보관</button>' +
+      '</div>' +
+      '<span class="pill ' + stats.status + '">' + statusLabel(stats.status) + '</span>' +
+      '<div class="fields-row" style="margin-top:14px;">' +
+        '<div class="field"><label>허들 금액</label><div class="unit-input"><input type="number" class="hurdle-input" data-cardid="' + card.id + '" value="' + stats.hurdle + '" min="0" step="10000"><span>원</span></div></div>' +
+        '<div class="field"><label>현재 실적</label><div class="unit-input"><input type="number" class="perf-input" data-cardid="' + card.id + '" value="' + stats.base + '" min="0" step="1000"><span>원</span></div></div>' +
+      '</div>' +
+      '<div class="bar-wrap"><div class="bar">' + barSegmentsHtml(stats) + '</div>' +
+        '<div class="bar-labels"><span>0</span><span class="gap ' + stats.status + '">' + gapText + '</span><span>허들 ' + won(stats.hurdle) + '</span></div>' +
+      '</div>' +
+      '<div class="payments">' +
+        '<div class="payments-head"><span>정기결제 (' + payments.length + ')</span><button class="add-payment" data-cardid="' + card.id + '">+ 추가</button></div>' +
+        rowsHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderGrid(){
+    var grid = document.getElementById('grid');
+    var cards = activeCards();
+    if(cards.length === 0){
+      grid.innerHTML = '<div class="empty">등록된 카드가 없어요. 아래에서 카드를 추가해보세요.</div>';
+    } else {
+      grid.innerHTML = cards.map(cardHtml).join('') +
+        '<div class="card" style="display:flex;align-items:center;justify-content:center;min-height:120px;">' +
+          '<button class="add-payment" id="add-card-btn" style="padding:8px 16px;font-size:13px;">+ 새 카드 추가</button>' +
+        '</div>';
+    }
+    attachGridHandlers();
+    renderArchivedList();
+  }
+
+  function renderArchivedList(){
+    var archived = cardsData.filter(function(c){ return c.archived; });
+    var toggle = document.getElementById('archived-toggle');
+    var list = document.getElementById('archived-list');
+    if(archived.length === 0){ toggle.hidden = true; list.innerHTML=''; return; }
+    toggle.hidden = false;
+    toggle.textContent = (showArchived ? '보관된 카드 숨기기' : '보관된 카드 ' + archived.length + '개 보기');
+    list.innerHTML = showArchived ? archived.map(function(c){
+      return '<div class="archived-chip">' + escapeHtml(c.name) + '<button data-cardid="' + c.id + '">복원</button></div>';
+    }).join('') : '';
+    list.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){ setArchived(btn.getAttribute('data-cardid'), false); });
+    });
+  }
+
+  function attachGridHandlers(){
+    document.querySelectorAll('.archive-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){ setArchived(btn.getAttribute('data-cardid'), true); });
+    });
+    document.querySelectorAll('.hurdle-input').forEach(function(el){
+      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', Number(el.value)||0); });
+    });
+    document.querySelectorAll('.perf-input').forEach(function(el){
+      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'currentPerformance', Number(el.value)||0); });
+    });
+    document.querySelectorAll('.add-payment').forEach(function(btn){
+      btn.addEventListener('click', function(){ addPayment(btn.getAttribute('data-cardid')); });
+    });
+    var addCardBtn = document.getElementById('add-card-btn');
+    if(addCardBtn){ addCardBtn.addEventListener('click', promptAddCard); }
+
+    document.querySelectorAll('.card[data-cardid]').forEach(function(cardEl){
+      var cardId = cardEl.getAttribute('data-cardid');
+      cardEl.querySelectorAll('.p-day').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'day', Number(el.value)||1); });
+      });
+      cardEl.querySelectorAll('.p-label').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'label', el.value); });
+      });
+      cardEl.querySelectorAll('.p-type').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amountType', el.value); });
+      });
+      cardEl.querySelectorAll('.p-amount').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amount', Number(el.value)||0); });
+      });
+      cardEl.querySelectorAll('.p-min').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'min', Number(el.value)||0); });
+      });
+      cardEl.querySelectorAll('.p-max').forEach(function(el){
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', Number(el.value)||0); });
+      });
+      cardEl.querySelectorAll('.del').forEach(function(el){
+        el.addEventListener('click', function(){ removePayment(cardId, +el.dataset.idx); });
+      });
+    });
+  }
+
+  function renderAll(){
+    renderMonthBar();
+    renderGrid();
+    renderReco();
+  }
+
+  // ---------- data ops ----------
+
+  function recordRef(cardId, month){
+    return db.doc('months/' + (month||currentMonth) + '/records/' + cardId);
+  }
+
+  function ensureRecord(cardId){
+    if(recordsData[cardId] || creatingRecordFor[cardId]) return;
+    creatingRecordFor[cardId] = true;
+    recordRef(cardId).set({hurdleAmount:0, currentPerformance:0, recurringPayments:[]})
+      .catch(function(){}).finally(function(){ delete creatingRecordFor[cardId]; });
+  }
+
+  function updateRecordField(cardId, field, value){
+    var obj = {}; obj[field] = value;
+    recordRef(cardId).update(obj).catch(function(){ ensureRecord(cardId); });
+  }
+
+  function clonePayments(cardId){
+    var rec = recordsData[cardId];
+    return (rec && rec.recurringPayments) ? rec.recurringPayments.map(function(p){ return Object.assign({}, p); }) : [];
+  }
+
+  function writePayments(cardId, arr){
+    recordRef(cardId).update({recurringPayments: arr}).catch(function(){});
+  }
+
+  function addPayment(cardId){
+    var arr = clonePayments(cardId);
+    arr.push({day:1, label:'', amountType:'fixed', amount:0});
+    writePayments(cardId, arr);
+  }
+
+  function updatePaymentField(cardId, idx, field, value){
+    var arr = clonePayments(cardId);
+    if(!arr[idx]) return;
+    arr[idx][field] = value;
+    writePayments(cardId, arr);
+  }
+
+  function removePayment(cardId, idx){
+    var arr = clonePayments(cardId);
+    arr.splice(idx, 1);
+    writePayments(cardId, arr);
+  }
+
+  function promptAddCard(){
+    var name = window.prompt('새 카드 이름을 입력하세요 (예: 신한 처음카드)');
+    if(!name) return;
+    db.collection('cards').add({name:name, archived:false, createdAt:new Date().toISOString()})
+      .then(function(ref){
+        return recordRef(ref.id).set({hurdleAmount:0, currentPerformance:0, recurringPayments:[]});
+      }).catch(function(){});
+  }
+
+  function setArchived(cardId, val){
+    db.doc('cards/' + cardId).update({archived: val}).catch(function(){});
+  }
+
+  function addMonth(monthId, copyPrev){
+    var source = copyPrev ? currentMonth : null;
+    db.doc('months/' + monthId).set({label: monthId, createdAt: new Date().toISOString()}).then(function(){
+      var jobs = activeCards().map(function(c){
+        var src = source ? recordsData[c.id] : null;
+        var newRec = src
+          ? {hurdleAmount: src.hurdleAmount||0, currentPerformance: 0, recurringPayments: (src.recurringPayments||[]).map(function(p){ return Object.assign({}, p); })}
+          : {hurdleAmount: 0, currentPerformance: 0, recurringPayments: []};
+        return db.doc('months/' + monthId + '/records/' + c.id).set(newRec);
+      });
+      return Promise.all(jobs);
+    }).then(function(){ selectMonth(monthId); }).catch(function(){});
+  }
+
+  function selectMonth(monthId){
+    if(monthId === currentMonth) return;
+    currentMonth = monthId;
+    if(unsubRecords) unsubRecords();
+    recordsData = {};
+    document.getElementById('reco-result').innerHTML = '';
+    delete document.getElementById('reco-amount').dataset.lastRun;
+    subscribeRecords();
+    renderAll();
+  }
+
+  // ---------- subscriptions ----------
+
+  function subscribeRecords(){
+    unsubRecords = db.collection('months/' + currentMonth + '/records').onSnapshot(function(snap){
+      var next = {};
+      snap.docs.forEach(function(d){ next[d.id] = d.data(); });
+      recordsData = next;
+      activeCards().forEach(function(c){ ensureRecord(c.id); });
+      renderAll();
+    }, function(){});
+  }
+
+  function seedInitialData(){
+    seeded = true;
+    var month = new Date().toISOString().slice(0,7);
+    var kb = 'kb_gukmin_pointreedy', hana = 'hana_club_sk';
+    Promise.all([
+      db.doc('cards/' + kb).set({name:'KB국민 금융포인트리 카드', archived:false, createdAt:new Date().toISOString()}),
+      db.doc('cards/' + hana).set({name:'하나 클럽SK 카드', archived:false, createdAt:new Date().toISOString()}),
+      db.doc('months/' + month).set({label: month, createdAt: new Date().toISOString()}),
+      db.doc('months/' + month + '/records/' + kb).set({
+        hurdleAmount: 300000, currentPerformance: 0,
+        recurringPayments: [
+          {day:6, label:'슬 이모티콘', amountType:'fixed', amount:3900},
+          {day:10, label:'가스요금', amountType:'range', min:20000, max:90000},
+          {day:15, label:'LG 가전케어', amountType:'points', amount:0, note:'포인트 17,900원 차감 후 0원 결제 예정'},
+          {day:18, label:'네이버플러스(Netflix)', amountType:'points', amount:0, note:'포인트 6,500원 차감 후 0원 결제 예정'},
+          {day:19, label:'T우주(편의점&카페)+TVING(스탠다드)', amountType:'fixed', amount:10000},
+          {day:25, label:'관리비', amountType:'range', min:110000, max:220000}
+        ]
+      }),
+      db.doc('months/' + month + '/records/' + hana).set({
+        hurdleAmount: 1000000, currentPerformance: 540000,
+        recurringPayments: [
+          {day:2, label:'제니스 포헨 8월', amountType:'fixed', amount:240000},
+          {day:2, label:'국어학원 8월', amountType:'fixed', amount:340000},
+          {day:3, label:'MS365', amountType:'fixed', amount:3900},
+          {day:30, label:'클로드(달러 결제)', amountType:'range', min:31000, max:33000}
+        ]
+      })
+    ]);
+  }
+
+  function init(){
+    document.getElementById('reco-btn').addEventListener('click', function(){
+      runReco(Number(document.getElementById('reco-amount').value) || 0);
+    });
+    document.getElementById('reco-amount').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ runReco(Number(e.target.value) || 0); }
+    });
+    document.getElementById('archived-toggle').addEventListener('click', function(){
+      showArchived = !showArchived; renderArchivedList();
+    });
+
+    if(!window.claude || !window.claude.use){
+      renderBanner('이 페이지는 Claude 앱 환경에서 열어야 데이터가 저장됩니다.');
+      return;
+    }
+    window.claude.use('db').then(function(dbNs){
+      if(!dbNs){
+        renderBanner('데이터 저장 기능(db)을 사용할 수 없는 환경입니다. 값을 입력해도 저장되지 않아요.');
+        return;
+      }
+      db = dbNs;
+
+      db.collection('months').onSnapshot(function(snap){
+        monthsData = snap.docs.map(function(d){ return {id:d.id, label:(d.data()||{}).label||d.id}; })
+          .sort(function(a,b){ return a.id.localeCompare(b.id); });
+        if(monthsData.length === 0 && cardsData.length === 0 && !seeded){
+          seedInitialData();
+          return;
+        }
+        if(!currentMonth && monthsData.length){
+          currentMonth = monthsData[monthsData.length-1].id;
+          subscribeRecords();
+        }
+        renderAll();
+      }, function(){});
+
+      db.collection('cards').onSnapshot(function(snap){
+        cardsData = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        if(monthsData.length === 0 && cardsData.length === 0 && !seeded){
+          seedInitialData();
+          return;
+        }
+        renderAll();
+      }, function(){});
+    });
+  }
+
+  init();
+})();
+</script>

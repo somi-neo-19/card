@@ -409,7 +409,7 @@
       html += '<div class="fill-range" style="left:' + pct(stats.base) + '%;width:' + (pct(solidEnd)-pct(stats.base)) + '%;background:var(--accent);border:none;"></div>';
     }
     if(stats.sumMax > stats.sumMin || stats.sumMin > 0){
-      html += '<div class="fill-range" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMax-stats.sumMin>0?stats.sumMax-stats.sumMin:0)) + '%;"></div>';
+      html += '<div class="fill-range" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMax)-pct(solidEnd)) + '%;"></div>';
       // min portion of the range, solid
       if(stats.sumMin > 0){
         html += '<div class="fill" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMin)-pct(solidEnd)) + '%;position:absolute;border-radius:0;"></div>';

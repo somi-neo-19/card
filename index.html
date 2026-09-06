@@ -145,6 +145,27 @@
   .reco-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:13px;}
   .reco-list-row{display:flex;justify-content:space-between;gap:12px;color:var(--ink-soft);}
   .reco-list-row b{color:var(--ink);font-weight:600;}
+
+  /* 카드별 실적 현황 요약 대시보드 */
+  .summary{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px 22px;margin-bottom:28px;box-shadow:var(--shadow);
+  }
+  .summary h2{font-size:17px;margin-bottom:14px;}
+  .summary-row{
+    display:grid;grid-template-columns:120px 1fr 96px;align-items:center;gap:14px;
+    padding:9px 0;border-bottom:1px solid var(--border);
+  }
+  .summary-row:last-child{border-bottom:none;}
+  .summary-name{
+    font-size:13.5px;font-weight:600;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .summary-status{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
+  .summary-status.short{color:var(--danger);}
+  .summary-status.likely{color:var(--warn);}
+  .summary-status.achieved{color:var(--good);}
+  .summary-empty{color:var(--ink-soft);font-size:13px;padding:6px 0;}
   .reco-empty{color:var(--good);font-weight:600;font-size:14px;}
 
   /* card grid */
@@ -254,6 +275,17 @@
     .reco-row input{font-size:16px;width:100%;}
     .reco-row{gap:10px;}
     .reco-row button{width:100%;}
+
+    .summary{padding:16px;}
+    .summary h2{font-size:16px;}
+    .summary-row{
+      grid-template-columns:1fr auto;
+      grid-template-areas:"name status" "bar bar";
+      row-gap:6px;padding:10px 0;
+    }
+    .summary-name{grid-area:name;font-size:14px;}
+    .summary-status{grid-area:status;font-size:13px;}
+    .summary-bar{grid-area:bar;}
     .reco-row button{font-size:15px;}
     .reco-pick .name{font-size:17px;}
     .reco-pick .why{font-size:14px;}
@@ -351,6 +383,11 @@
       <button id="reco-btn">추천받기</button>
     </div>
     <div class="reco-result" id="reco-result"></div>
+  </section>
+
+  <section class="summary" id="summary-section">
+    <h2>카드별 실적 현황</h2>
+    <div class="summary-list" id="summary-list"></div>
   </section>
 
   <div class="grid" id="grid"></div>
@@ -740,8 +777,34 @@
     });
   }
 
+  function renderSummary(){
+    var el = document.getElementById('summary-list');
+    var list = activeCards().map(function(c){
+      return {card:c, stats: computeStats(recordsData[c.id])};
+    });
+    if(list.length === 0){
+      el.innerHTML = '<div class="summary-empty">아직 등록된 카드가 없어요.</div>';
+      return;
+    }
+    var rank = {short:0, likely:1, achieved:2};
+    list.sort(function(a, b){
+      var ra = rank[a.stats.status], rb = rank[b.stats.status];
+      if(ra !== rb) return ra - rb;
+      return b.stats.gapMin - a.stats.gapMin;
+    });
+    el.innerHTML = list.map(function(x){
+      var gapText = x.stats.status === 'achieved' ? '달성 완료' : (won(x.stats.gapMin) + ' 부족');
+      return '<div class="summary-row">' +
+        '<div class="summary-name">' + escapeHtml(x.card.name) + '</div>' +
+        '<div class="summary-bar"><div class="bar">' + barSegmentsHtml(x.stats) + '</div></div>' +
+        '<div class="summary-status ' + x.stats.status + '">' + gapText + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   function renderAll(){
     renderMonthBar();
+    renderSummary();
     renderGrid();
     renderReco();
   }

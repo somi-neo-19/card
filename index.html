@@ -160,6 +160,13 @@
   }
   .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;}
   .card-head h3{font-size:19px;}
+  .card-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+  .reorder-btn{
+    background:none;border:1px solid var(--border);border-radius:6px;color:var(--ink-soft);
+    font-size:12px;line-height:1;padding:4px 7px;
+  }
+  .reorder-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+  .reorder-btn:disabled{opacity:.3;}
   .archive-btn{background:none;border:none;color:var(--ink-soft);font-size:12px;text-decoration:underline;padding:2px;}
   .archive-btn:hover{color:var(--danger);}
 
@@ -257,6 +264,7 @@
     .card{padding:16px 16px 14px;}
     .card-head h3{font-size:20px;}
     .archive-btn{font-size:13px;}
+    .reorder-btn{font-size:14px;padding:5px 9px;}
     .pill{font-size:13.5px;padding:5px 12px;}
 
     .field label{font-size:12.5px;}
@@ -437,7 +445,29 @@
       projectedMin:projectedMin, projectedMax:projectedMax, gapMin:gapMin, gapAtMax:gapAtMax, status:status};
   }
 
-  function activeCards(){ return cardsData.filter(function(c){ return !c.archived; }); }
+  function activeCards(){
+    return cardsData.filter(function(c){ return !c.archived; })
+      .sort(function(a,b){
+        var oa = typeof a.order === 'number' ? a.order : Infinity;
+        var ob = typeof b.order === 'number' ? b.order : Infinity;
+        return oa - ob;
+      });
+  }
+
+  // 카드 배치 순서 변경: 현재 화면 순서에서 카드를 한 칸 위/아래로 옮기고,
+  // 활성 카드 전체에 순번(order)을 다시 매겨 저장
+  function moveCard(cardId, dir){
+    var list = activeCards();
+    var idx = -1;
+    for(var i = 0; i < list.length; i++){ if(list[i].id === cardId){ idx = i; break; } }
+    if(idx === -1) return;
+    var swapIdx = idx + dir;
+    if(swapIdx < 0 || swapIdx >= list.length) return;
+    var tmp = list[idx]; list[idx] = list[swapIdx]; list[swapIdx] = tmp;
+    Promise.all(list.map(function(c, i){
+      return db.doc('cards/' + c.id).update({order: i});
+    })).catch(function(){});
+  }
 
   // ---------- rendering ----------
 
@@ -593,7 +623,7 @@
       '</div>' + note;
   }
 
-  function cardHtml(card){
+  function cardHtml(card, idx, arr){
     var record = recordsData[card.id] || {hurdleAmount:0, currentPerformance:0, recurringPayments:[]};
     var stats = computeStats(record);
     var payments = (record.recurringPayments||[]).slice().sort(function(a,b){ return (a.day||0)-(b.day||0); });
@@ -605,10 +635,16 @@
       return paymentRowHtml(card.id, p, origIdx);
     }).join('');
 
+    var isFirst = idx === 0, isLast = idx === arr.length - 1;
+
     return '<div class="card" data-cardid="' + card.id + '">' +
       '<div class="card-head">' +
         '<h3>' + escapeHtml(card.name) + '</h3>' +
-        '<button class="archive-btn" data-cardid="' + card.id + '">보관</button>' +
+        '<div class="card-actions">' +
+          '<button class="reorder-btn move-up" data-cardid="' + card.id + '" title="위로"' + (isFirst?' disabled':'') + '>▲</button>' +
+          '<button class="reorder-btn move-down" data-cardid="' + card.id + '" title="아래로"' + (isLast?' disabled':'') + '>▼</button>' +
+          '<button class="archive-btn" data-cardid="' + card.id + '">보관</button>' +
+        '</div>' +
       '</div>' +
       '<span class="pill ' + stats.status + '">' + statusLabel(stats.status) + '</span>' +
       '<div class="fields-row" style="margin-top:14px;">' +
@@ -658,6 +694,12 @@
   function attachGridHandlers(){
     document.querySelectorAll('.archive-btn').forEach(function(btn){
       btn.addEventListener('click', function(){ setArchived(btn.getAttribute('data-cardid'), true); });
+    });
+    document.querySelectorAll('.move-up').forEach(function(btn){
+      btn.addEventListener('click', function(){ moveCard(btn.getAttribute('data-cardid'), -1); });
+    });
+    document.querySelectorAll('.move-down').forEach(function(btn){
+      btn.addEventListener('click', function(){ moveCard(btn.getAttribute('data-cardid'), 1); });
     });
     document.querySelectorAll('.hurdle-input').forEach(function(el){
       el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', parseMoney(el)); });

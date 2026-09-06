@@ -680,16 +680,27 @@
     return db.doc('months/' + (month||currentMonth) + '/records/' + cardId);
   }
 
+  // 문서가 이미 있으면 절대 건드리지 않고, 없을 때만 기본값으로 생성한다.
+  // (트랜잭션으로 확인 후 생성해야, 사용자가 막 입력한 값을 이 초기화 로직이 덮어쓰는 경쟁 상태를 막을 수 있음)
   function ensureRecord(cardId){
     if(recordsData[cardId] || creatingRecordFor[cardId]) return;
     creatingRecordFor[cardId] = true;
-    recordRef(cardId).set({hurdleAmount:0, currentPerformance:0, recurringPayments:[]})
-      .catch(function(){}).finally(function(){ delete creatingRecordFor[cardId]; });
+    var ref = recordRef(cardId);
+    db.runTransaction(function(tx){
+      return tx.get(ref).then(function(doc){
+        if(!doc.exists){
+          tx.set(ref, {hurdleAmount:0, currentPerformance:0, recurringPayments:[]});
+        }
+      });
+    }).catch(function(){}).finally(function(){ delete creatingRecordFor[cardId]; });
   }
 
+  // update()는 문서가 아직 없으면 실패하는데, 그 실패를 문서 전체 초기화로 처리하면
+  // 막 입력한 값이 사라져버린다. set(..., {merge:true})는 문서가 없어도 실패 없이
+  // 해당 필드만 만들어주므로 이 문제가 생기지 않는다.
   function updateRecordField(cardId, field, value){
     var obj = {}; obj[field] = value;
-    recordRef(cardId).update(obj).catch(function(){ ensureRecord(cardId); });
+    recordRef(cardId).set(obj, {merge:true}).catch(function(){});
   }
 
   function clonePayments(cardId){
@@ -698,7 +709,7 @@
   }
 
   function writePayments(cardId, arr){
-    recordRef(cardId).update({recurringPayments: arr}).catch(function(){});
+    recordRef(cardId).set({recurringPayments: arr}, {merge:true}).catch(function(){});
   }
 
   function addPayment(cardId){

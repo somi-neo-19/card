@@ -294,9 +294,34 @@
     .archived-chip button{font-size:13px;}
     .empty{font-size:15px;}
   }
+
+  /* 당겨서 새로고침 인디케이터 */
+  .ptr-indicator{
+    position:fixed;top:0;left:0;right:0;height:52px;z-index:50;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--surface);border-bottom:1px solid var(--border);
+    color:var(--ink-soft);font-size:13px;
+    transform:translateY(-100%);
+  }
+  .ptr-indicator.snap{transition:transform .2s ease;}
+  .ptr-indicator .ptr-spinner{
+    width:14px;height:14px;border-radius:50%;flex:0 0 auto;
+    border:2px solid var(--border);border-top-color:var(--accent);
+  }
+  .ptr-indicator.loading .ptr-spinner{animation:ptr-spin .6s linear infinite;}
+  @keyframes ptr-spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){
+    .ptr-indicator{transition:none !important;}
+    .ptr-indicator.loading .ptr-spinner{animation:none;}
+  }
 </style>
 </head>
 <body>
+
+<div class="ptr-indicator" id="ptr-indicator">
+  <span class="ptr-spinner" aria-hidden="true"></span>
+  <span class="ptr-text">아래로 당겨서 새로고침</span>
+</div>
 
 <div class="wrap">
   <header class="top">
@@ -806,7 +831,73 @@
     ]);
   }
 
+  // 스마트폰에서 화면 맨 위를 아래로 당기면 페이지를 강제로 새로고침
+  // (캐시된 예전 버전이 아니라 항상 최신 파일을 다시 받아오도록 URL에 매번 다른 값을 붙임)
+  function setupPullToRefresh(){
+    var indicator = document.getElementById('ptr-indicator');
+    if(!indicator) return;
+    var textEl = indicator.querySelector('.ptr-text');
+    var THRESHOLD = 70;
+    var startY = null, pulling = false, currentPct = 0;
+
+    function scrollTop(){ return (document.scrollingElement || document.documentElement).scrollTop; }
+
+    function setPct(pct){
+      currentPct = Math.max(0, Math.min(1, pct));
+      indicator.style.transform = 'translateY(' + (currentPct * 100 - 100) + '%)';
+      textEl.textContent = currentPct >= 1 ? '놓으면 새로고침' : '아래로 당겨서 새로고침';
+    }
+
+    function reset(){
+      indicator.classList.add('snap');
+      setPct(0);
+      setTimeout(function(){ indicator.classList.remove('snap'); }, 220);
+    }
+
+    function doRefresh(){
+      indicator.classList.add('snap', 'loading');
+      textEl.textContent = '새로고침 중...';
+      indicator.style.transform = 'translateY(0%)';
+      setTimeout(function(){
+        var base = location.pathname + location.search.replace(/[?&]_r=\d+/, '');
+        var sep = base.indexOf('?') === -1 ? '?' : '&';
+        location.href = base + sep + '_r=' + Date.now() + location.hash;
+      }, 300);
+    }
+
+    document.addEventListener('touchstart', function(e){
+      if(scrollTop() > 0 || e.touches.length !== 1){ startY = null; return; }
+      startY = e.touches[0].clientY;
+      pulling = false;
+    }, {passive:true});
+
+    document.addEventListener('touchmove', function(e){
+      if(startY == null) return;
+      var dy = e.touches[0].clientY - startY;
+      if(dy <= 0 || scrollTop() > 0){
+        if(pulling){ reset(); pulling = false; }
+        return;
+      }
+      pulling = true;
+      e.preventDefault();
+      indicator.classList.remove('snap');
+      setPct(dy / THRESHOLD);
+    }, {passive:false});
+
+    document.addEventListener('touchend', function(){
+      if(!pulling){ startY = null; return; }
+      pulling = false;
+      startY = null;
+      if(currentPct >= 1){ doRefresh(); } else { reset(); }
+    });
+    document.addEventListener('touchcancel', function(){
+      if(pulling){ reset(); }
+      pulling = false; startY = null;
+    });
+  }
+
   function init(){
+    setupPullToRefresh();
     document.getElementById('reco-btn').addEventListener('click', function(){
       runReco(parseMoney(document.getElementById('reco-amount')));
     });

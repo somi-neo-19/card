@@ -126,7 +126,7 @@
   .reco h2{font-size:19px;color:var(--accent);margin-bottom:4px;}
   .reco .hint{color:var(--ink-soft);font-size:13px;margin-bottom:14px;}
   .reco-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-  .reco-row input[type="number"]{
+  .reco-row input{
     width:180px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);
     background:var(--surface);color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums;
   }
@@ -244,7 +244,9 @@
     .banner{font-size:15px;}
     .addmonth-form{font-size:14px;}
     .reco .hint{font-size:14px;}
-    .reco-row input[type="number"]{font-size:16px;}
+    .reco-row input{font-size:16px;width:100%;}
+    .reco-row{gap:10px;}
+    .reco-row button{width:100%;}
     .reco-row button{font-size:15px;}
     .reco-pick .name{font-size:17px;}
     .reco-pick .why{font-size:14px;}
@@ -265,9 +267,26 @@
 
     .payments-head span{font-size:13px;}
     .add-payment{font-size:13px;}
-    .prow{grid-template-columns:40px 1fr 62px 1fr 22px;gap:5px;}
-    .prow input[type="text"],.prow input[type="number"],.prow select{font-size:13.5px;padding:7px 6px;}
-    .prow .del{font-size:17px;}
+
+    /* 정기결제 한 줄(day/label/type/amount/삭제)을 2줄로 재배치:
+       1줄 = 날짜 + 항목명 + 삭제, 2줄 = 종류 + 금액(전체 폭 사용) */
+    .prow{
+      display:grid;
+      grid-template-columns:42px 1fr 1fr 26px;
+      grid-template-areas:
+        "day label label del"
+        "type type amt amt";
+      gap:6px 8px;
+    }
+    .prow .p-day{grid-area:day;}
+    .prow .p-label{grid-area:label;}
+    .prow .del{grid-area:del;}
+    .prow .p-type{grid-area:type;}
+    .prow .amt{grid-area:amt;}
+    .prow .p-amount{grid-area:amt;}
+
+    .prow input[type="text"],.prow input[type="number"],.prow select{font-size:15px;padding:8px 8px;}
+    .prow .del{font-size:18px;}
     .points-note{font-size:12.5px;}
 
     .archived-toggle{font-size:14px;}
@@ -295,7 +314,7 @@
     <h2>지금 결제하려는 금액은?</h2>
     <div class="hint">아직 허들을 못 채운 카드 중 가장 알맞은 카드를 추천해드려요.</div>
     <div class="reco-row">
-      <input type="number" id="reco-amount" placeholder="예: 50000" min="0" step="1000">
+      <input type="text" inputmode="numeric" id="reco-amount" class="money-input" placeholder="예: 50,000">
       <button id="reco-btn">추천받기</button>
     </div>
     <div class="reco-result" id="reco-result"></div>
@@ -334,6 +353,35 @@
   var showArchived = false;
 
   var won = function(n){ return Math.round(n||0).toLocaleString('ko-KR') + '원'; };
+  var fmtNum = function(n){ return Math.round(n||0).toLocaleString('ko-KR'); };
+
+  // 금액 입력란: 콤마가 섞인 문자열에서 순수 숫자만 뽑아냄
+  function parseMoney(el){ return Number(String(el.value||'').replace(/[^\d]/g,'')) || 0; }
+
+  // 금액 입력란에 실시간으로 세자리 콤마를 넣어주는 핸들러 (커서 위치도 최대한 유지)
+  function onMoneyInput(e){
+    var el = e.target;
+    var caret = el.selectionStart == null ? el.value.length : el.selectionStart;
+    var digitsBefore = (el.value.slice(0, caret).match(/\d/g) || []).length;
+    var raw = el.value.replace(/[^\d]/g, '');
+    var formatted = raw === '' ? '' : Number(raw).toLocaleString('ko-KR');
+    el.value = formatted;
+    var seen = 0, newCaret = formatted.length;
+    for(var i = 0; i < formatted.length; i++){
+      if(/\d/.test(formatted[i])){
+        seen++;
+        if(seen === digitsBefore){ newCaret = i + 1; break; }
+      }
+    }
+    if(digitsBefore === 0) newCaret = 0;
+    el.setSelectionRange(newCaret, newCaret);
+  }
+
+  function attachMoneyInputs(root){
+    root.querySelectorAll('.money-input').forEach(function(el){
+      el.addEventListener('input', onMoneyInput);
+    });
+  }
 
   // 결제일(day)이 오늘 기준으로 이미 지났는지 (조회 중인 달이 이번 달이 아니면 달 전체로 판단)
   function isPastDue(day){
@@ -424,7 +472,7 @@
     // re-render current reco result if present, using latest data
     var amountInput = document.getElementById('reco-amount');
     if(amountInput && amountInput.dataset.lastRun){
-      runReco(Number(amountInput.value)||0);
+      runReco(parseMoney(amountInput));
     }
   }
 
@@ -502,12 +550,12 @@
       '</select>';
     var amtHtml;
     if(p.amountType === 'range'){
-      amtHtml = '<div class="amt"><input type="number" class="p-min" data-idx="'+idx+'" value="'+(p.min||0)+'" placeholder="최소" min="0" step="1000">' +
-        '<span>~</span><input type="number" class="p-max" data-idx="'+idx+'" value="'+(p.max||0)+'" placeholder="최대" min="0" step="1000"></div>';
+      amtHtml = '<div class="amt"><input type="text" inputmode="numeric" class="p-min money-input" data-idx="'+idx+'" value="'+fmtNum(p.min||0)+'" placeholder="최소">' +
+        '<span>~</span><input type="text" inputmode="numeric" class="p-max money-input" data-idx="'+idx+'" value="'+fmtNum(p.max||0)+'" placeholder="최대"></div>';
     } else if(p.amountType === 'points'){
-      amtHtml = '<input type="number" class="p-amount" data-idx="'+idx+'" value="0" disabled style="opacity:.5">';
+      amtHtml = '<input type="text" inputmode="numeric" class="p-amount money-input" data-idx="'+idx+'" value="0" disabled style="opacity:.5">';
     } else {
-      amtHtml = '<input type="number" class="p-amount" data-idx="'+idx+'" value="'+(p.amount||0)+'" min="0" step="100">';
+      amtHtml = '<input type="text" inputmode="numeric" class="p-amount money-input" data-idx="'+idx+'" value="'+fmtNum(p.amount||0)+'" placeholder="금액">';
     }
     var note = p.amountType === 'points' && p.note
       ? '<div class="points-note">' + escapeHtml(p.note) + '</div>' : '';
@@ -539,8 +587,8 @@
       '</div>' +
       '<span class="pill ' + stats.status + '">' + statusLabel(stats.status) + '</span>' +
       '<div class="fields-row" style="margin-top:14px;">' +
-        '<div class="field"><label>허들 금액</label><div class="unit-input"><input type="number" class="hurdle-input" data-cardid="' + card.id + '" value="' + stats.hurdle + '" min="0" step="10000"><span>원</span></div></div>' +
-        '<div class="field"><label>현재 실적</label><div class="unit-input"><input type="number" class="perf-input" data-cardid="' + card.id + '" value="' + stats.base + '" min="0" step="1000"><span>원</span></div></div>' +
+        '<div class="field"><label>허들 금액</label><div class="unit-input"><input type="text" inputmode="numeric" class="hurdle-input money-input" data-cardid="' + card.id + '" value="' + fmtNum(stats.hurdle) + '"><span>원</span></div></div>' +
+        '<div class="field"><label>현재 실적</label><div class="unit-input"><input type="text" inputmode="numeric" class="perf-input money-input" data-cardid="' + card.id + '" value="' + fmtNum(stats.base) + '"><span>원</span></div></div>' +
       '</div>' +
       '<div class="bar-wrap"><div class="bar">' + barSegmentsHtml(stats) + '</div>' +
         '<div class="bar-labels"><span>0</span><span class="gap ' + stats.status + '">' + gapText + '</span><span>허들 ' + won(stats.hurdle) + '</span></div>' +
@@ -587,10 +635,10 @@
       btn.addEventListener('click', function(){ setArchived(btn.getAttribute('data-cardid'), true); });
     });
     document.querySelectorAll('.hurdle-input').forEach(function(el){
-      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', Number(el.value)||0); });
+      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', parseMoney(el)); });
     });
     document.querySelectorAll('.perf-input').forEach(function(el){
-      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'currentPerformance', Number(el.value)||0); });
+      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'currentPerformance', parseMoney(el)); });
     });
     document.querySelectorAll('.add-payment').forEach(function(btn){
       btn.addEventListener('click', function(){ addPayment(btn.getAttribute('data-cardid')); });
@@ -610,17 +658,18 @@
         el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amountType', el.value); });
       });
       cardEl.querySelectorAll('.p-amount').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amount', Number(el.value)||0); });
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amount', parseMoney(el)); });
       });
       cardEl.querySelectorAll('.p-min').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'min', Number(el.value)||0); });
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'min', parseMoney(el)); });
       });
       cardEl.querySelectorAll('.p-max').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', Number(el.value)||0); });
+        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', parseMoney(el)); });
       });
       cardEl.querySelectorAll('.del').forEach(function(el){
         el.addEventListener('click', function(){ removePayment(cardId, +el.dataset.idx); });
       });
+      attachMoneyInputs(cardEl);
     });
   }
 
@@ -759,11 +808,12 @@
 
   function init(){
     document.getElementById('reco-btn').addEventListener('click', function(){
-      runReco(Number(document.getElementById('reco-amount').value) || 0);
+      runReco(parseMoney(document.getElementById('reco-amount')));
     });
     document.getElementById('reco-amount').addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){ runReco(Number(e.target.value) || 0); }
+      if(e.key === 'Enter'){ runReco(parseMoney(e.target)); }
     });
+    attachMoneyInputs(document);
     document.getElementById('archived-toggle').addEventListener('click', function(){
       showArchived = !showArchived; renderArchivedList();
     });

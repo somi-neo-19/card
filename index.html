@@ -1,5 +1,8 @@
 <title>카드 허들 대시보드</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#F1F3EE;
@@ -259,6 +262,21 @@
 
 <script>
 (function(){
+  // ============================================================
+  // *** 여기를 수정하세요 ***
+  // Firebase 콘솔 > 프로젝트 설정 > 내 앱 에서 복사한 firebaseConfig 값을
+  // 아래 중괄호 안에 그대로 붙여넣으세요. (자세한 방법은 FIREBASE_SETUP.md 참고)
+  // ============================================================
+  var firebaseConfig = {
+    apiKey: "여기에 apiKey 값을 붙여넣으세요",
+    authDomain: "여기에 authDomain 값을 붙여넣으세요",
+    projectId: "여기에 projectId 값을 붙여넣으세요",
+    storageBucket: "여기에 storageBucket 값을 붙여넣으세요",
+    messagingSenderId: "여기에 messagingSenderId 값을 붙여넣으세요",
+    appId: "여기에 appId 값을 붙여넣으세요"
+  };
+  // ============================================================
+
   var db = null;
   var currentMonth = null;
   var monthsData = [];
@@ -704,16 +722,18 @@
       showArchived = !showArchived; renderArchivedList();
     });
 
-    if(!window.claude || !window.claude.use){
-      renderBanner('이 페이지는 Claude 앱 환경에서 열어야 데이터가 저장됩니다.');
+    if(firebaseConfig.apiKey.indexOf('여기에') === 0){
+      renderBanner('firebaseConfig 값이 아직 채워지지 않았습니다. index.html 맨 위의 설정값을 먼저 입력해주세요. (FIREBASE_SETUP.md 참고)');
       return;
     }
-    window.claude.use('db').then(function(dbNs){
-      if(!dbNs){
-        renderBanner('데이터 저장 기능(db)을 사용할 수 없는 환경입니다. 값을 입력해도 저장되지 않아요.');
-        return;
-      }
-      db = dbNs;
+
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+
+    var subscribed = false;
+    function subscribeShared(){
+      if(subscribed) return;
+      subscribed = true;
 
       db.collection('months').onSnapshot(function(snap){
         monthsData = snap.docs.map(function(d){ return {id:d.id, label:(d.data()||{}).label||d.id}; })
@@ -727,7 +747,9 @@
           subscribeRecords();
         }
         renderAll();
-      }, function(){});
+      }, function(){
+        renderBanner('데이터를 불러오지 못했습니다. Firestore 보안 규칙과 인증 상태를 확인해주세요.');
+      });
 
       db.collection('cards').onSnapshot(function(snap){
         cardsData = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
@@ -736,7 +758,17 @@
           return;
         }
         renderAll();
-      }, function(){});
+      }, function(){
+        renderBanner('데이터를 불러오지 못했습니다. Firestore 보안 규칙과 인증 상태를 확인해주세요.');
+      });
+    }
+
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user) return;
+      subscribeShared();
+    });
+    firebase.auth().signInAnonymously().catch(function(err){
+      renderBanner('로그인에 실패했습니다: ' + err.message + ' (Firebase 콘솔 > Authentication에서 익명 로그인이 켜져 있는지 확인해주세요)');
     });
   }
 

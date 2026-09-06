@@ -376,6 +376,14 @@
     });
   }
 
+  // 모바일 숫자 키패드는 '완료' 버튼이 없는 경우가 많아 사용자가 다른 곳을 탭하지
+  // 않으면 change(blur) 이벤트가 아예 안 나기도 한다. 그래서 blur를 기다리는 change와
+  // 별개로, 입력을 멈춘 지 800ms 뒤에도 자동으로 한 번 더 저장을 시도한다.
+  function scheduleAutoSave(el, commit){
+    clearTimeout(el._autoSaveTimer);
+    el._autoSaveTimer = setTimeout(commit, 800);
+  }
+
   // 결제일(day)이 오늘 기준으로 이미 지났는지 (조회 중인 달이 이번 달이 아니면 달 전체로 판단)
   function isPastDue(day){
     var now = new Date();
@@ -624,10 +632,14 @@
       btn.addEventListener('click', function(){ moveCard(btn.getAttribute('data-cardid'), 1); });
     });
     document.querySelectorAll('.hurdle-input').forEach(function(el){
-      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', parseMoney(el)); });
+      var commit = function(){ updateRecordField(el.getAttribute('data-cardid'), 'hurdleAmount', parseMoney(el)); };
+      el.addEventListener('change', commit);
+      el.addEventListener('input', function(){ scheduleAutoSave(el, commit); });
     });
     document.querySelectorAll('.perf-input').forEach(function(el){
-      el.addEventListener('change', function(){ updateRecordField(el.getAttribute('data-cardid'), 'currentPerformance', parseMoney(el)); });
+      var commit = function(){ updateRecordField(el.getAttribute('data-cardid'), 'currentPerformance', parseMoney(el)); };
+      el.addEventListener('change', commit);
+      el.addEventListener('input', function(){ scheduleAutoSave(el, commit); });
     });
     document.querySelectorAll('.add-payment').forEach(function(btn){
       btn.addEventListener('click', function(){ addPayment(btn.getAttribute('data-cardid')); });
@@ -654,13 +666,19 @@
         el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amountType', el.value); });
       });
       cardEl.querySelectorAll('.p-amount').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'amount', parseMoney(el)); });
+        var commit = function(){ updatePaymentField(cardId, +el.dataset.idx, 'amount', parseMoney(el)); };
+        el.addEventListener('change', commit);
+        el.addEventListener('input', function(){ scheduleAutoSave(el, commit); });
       });
       cardEl.querySelectorAll('.p-min').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'min', parseMoney(el)); });
+        var commit = function(){ updatePaymentField(cardId, +el.dataset.idx, 'min', parseMoney(el)); };
+        el.addEventListener('change', commit);
+        el.addEventListener('input', function(){ scheduleAutoSave(el, commit); });
       });
       cardEl.querySelectorAll('.p-max').forEach(function(el){
-        el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', parseMoney(el)); });
+        var commit = function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', parseMoney(el)); };
+        el.addEventListener('change', commit);
+        el.addEventListener('input', function(){ scheduleAutoSave(el, commit); });
       });
       cardEl.querySelectorAll('.del').forEach(function(el){
         el.addEventListener('click', function(){ removePayment(cardId, +el.dataset.idx); });

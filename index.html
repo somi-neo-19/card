@@ -118,56 +118,6 @@
   .addmonth-form label{display:flex;align-items:center;gap:6px;color:var(--ink-soft);}
   .addmonth-form input[type="month"]{padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--ink);}
 
-  /* recommendation panel */
-  .reco{
-    background:var(--accent-soft);border:1px solid var(--accent);border-radius:16px;
-    padding:22px 24px;margin-bottom:28px;
-  }
-  .reco h2{font-size:19px;color:var(--accent);margin-bottom:4px;}
-  .reco .hint{color:var(--ink-soft);font-size:13px;margin-bottom:14px;}
-  .reco-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-  .reco-row input{
-    width:180px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);
-    background:var(--surface);color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums;
-  }
-  .reco-row button{
-    padding:10px 20px;border-radius:8px;border:none;background:var(--accent);
-    color:var(--accent-ink);font-weight:700;font-size:14px;
-  }
-  .reco-row button:hover{filter:brightness(1.08);}
-  .reco-result{margin-top:16px;}
-  .reco-pick{
-    display:flex;align-items:center;gap:14px;background:var(--surface);border-radius:12px;
-    padding:14px 16px;box-shadow:var(--shadow);
-  }
-  .reco-pick .name{font-weight:700;font-size:16px;}
-  .reco-pick .why{color:var(--ink-soft);font-size:13px;margin-top:2px;}
-  .reco-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:13px;}
-  .reco-list-row{display:flex;justify-content:space-between;gap:12px;color:var(--ink-soft);}
-  .reco-list-row b{color:var(--ink);font-weight:600;}
-
-  /* 카드별 실적 현황 요약 대시보드 */
-  .summary{
-    background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:20px 22px;margin-bottom:28px;box-shadow:var(--shadow);
-  }
-  .summary h2{font-size:17px;margin-bottom:14px;}
-  .summary-row{
-    display:grid;grid-template-columns:120px 1fr 96px;align-items:center;gap:14px;
-    padding:9px 0;border-bottom:1px solid var(--border);
-  }
-  .summary-row:last-child{border-bottom:none;}
-  .summary-name{
-    font-size:13.5px;font-weight:600;color:var(--ink);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .summary-status{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;}
-  .summary-status.short{color:var(--danger);}
-  .summary-status.likely{color:var(--warn);}
-  .summary-status.achieved{color:var(--good);}
-  .summary-empty{color:var(--ink-soft);font-size:13px;padding:6px 0;}
-  .reco-empty{color:var(--good);font-weight:600;font-size:14px;}
-
   /* card grid */
   .grid{
     display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px;
@@ -235,8 +185,15 @@
   .bar-labels .gap.achieved{color:var(--good);}
 
   .payments{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
-  .payments-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .payments-head span{font-size:12px;letter-spacing:.04em;color:var(--ink-soft);text-transform:uppercase;}
+  .payments-toggle{
+    display:flex;justify-content:space-between;align-items:center;width:100%;
+    background:none;border:none;padding:0;margin:0;
+    font-size:12px;letter-spacing:.04em;color:var(--ink-soft);text-transform:uppercase;
+  }
+  .payments-toggle:hover{color:var(--accent);}
+  .payments-toggle .toggle-caret{font-size:12px;letter-spacing:0;text-transform:none;color:var(--accent);}
+  .payments-body{margin-top:10px;}
+  .payments-actions{display:flex;justify-content:flex-end;margin-bottom:8px;}
   .add-payment{background:none;border:1px dashed var(--border);border-radius:7px;color:var(--ink-soft);font-size:12px;padding:4px 9px;}
   .add-payment:hover{border-color:var(--accent);color:var(--accent);}
 
@@ -271,26 +228,6 @@
     header.top .sub{font-size:14px;}
     .banner{font-size:15px;}
     .addmonth-form{font-size:14px;}
-    .reco .hint{font-size:14px;}
-    .reco-row input{font-size:16px;width:100%;}
-    .reco-row{gap:10px;}
-    .reco-row button{width:100%;}
-
-    .summary{padding:16px;}
-    .summary h2{font-size:16px;}
-    .summary-row{
-      grid-template-columns:1fr auto;
-      grid-template-areas:"name status" "bar bar";
-      row-gap:6px;padding:10px 0;
-    }
-    .summary-name{grid-area:name;font-size:14px;}
-    .summary-status{grid-area:status;font-size:13px;}
-    .summary-bar{grid-area:bar;}
-    .reco-row button{font-size:15px;}
-    .reco-pick .name{font-size:17px;}
-    .reco-pick .why{font-size:14px;}
-    .reco-list{font-size:14px;}
-    .reco-empty{font-size:15px;}
 
     .grid{grid-template-columns:1fr;gap:16px;}
     .card{padding:16px 16px 14px;}
@@ -305,7 +242,7 @@
 
     .bar-labels{font-size:13px;}
 
-    .payments-head span{font-size:13px;}
+    .payments-toggle{font-size:13px;}
     .add-payment{font-size:13px;}
 
     /* 정기결제 한 줄(day/label/type/amount/삭제)을 2줄로 재배치:
@@ -367,28 +304,13 @@
   <header class="top">
     <div>
       <h1>카드 허들 대시보드</h1>
-      <div class="sub">카드별 혜택 실적 허들을 채우고, 다음 결제를 어디에 쓸지 추천받으세요</div>
+      <div class="sub">카드별 혜택 실적 허들을 채우고 정기결제를 관리하세요</div>
     </div>
   </header>
 
   <div id="banner"></div>
   <div class="monthbar" id="monthbar"></div>
   <div id="addmonth-slot"></div>
-
-  <section class="reco" id="reco-section">
-    <h2>지금 결제하려는 금액은?</h2>
-    <div class="hint">아직 허들을 못 채운 카드 중 가장 알맞은 카드를 추천해드려요.</div>
-    <div class="reco-row">
-      <input type="text" inputmode="numeric" id="reco-amount" class="money-input" placeholder="예: 50,000">
-      <button id="reco-btn">추천받기</button>
-    </div>
-    <div class="reco-result" id="reco-result"></div>
-  </section>
-
-  <section class="summary" id="summary-section">
-    <h2>카드별 실적 현황</h2>
-    <div class="summary-list" id="summary-list"></div>
-  </section>
 
   <div class="grid" id="grid"></div>
   <button class="archived-toggle" id="archived-toggle" hidden></button>
@@ -421,6 +343,7 @@
   var creatingRecordFor = {};
   var seeded = false;
   var showArchived = false;
+  var expandedPayments = {};
 
   var won = function(n){ return Math.round(n||0).toLocaleString('ko-KR') + '원'; };
   var fmtNum = function(n){ return Math.round(n||0).toLocaleString('ko-KR'); };
@@ -560,53 +483,6 @@
     return '부족';
   }
 
-  function renderReco(){
-    // re-render current reco result if present, using latest data
-    var amountInput = document.getElementById('reco-amount');
-    if(amountInput && amountInput.dataset.lastRun){
-      runReco(parseMoney(amountInput));
-    }
-  }
-
-  function runReco(amount){
-    var resultEl = document.getElementById('reco-result');
-    document.getElementById('reco-amount').dataset.lastRun = '1';
-    var list = activeCards().map(function(c){
-      return {card:c, stats: computeStats(recordsData[c.id])};
-    });
-    var needy = list.filter(function(x){ return x.stats.status !== 'achieved'; });
-
-    if(list.length === 0){
-      resultEl.innerHTML = '<div class="empty">아직 등록된 카드가 없어요. 카드를 먼저 추가해주세요.</div>';
-      return;
-    }
-    if(needy.length === 0){
-      resultEl.innerHTML = '<div class="reco-empty">이번 달은 모든 카드 실적을 달성했어요. 아무 카드나 편하게 사용하세요 🎉</div>';
-      return;
-    }
-    var completable = needy.filter(function(x){ return x.stats.gapMin <= amount; })
-      .sort(function(a,b){ return b.stats.gapMin - a.stats.gapMin; });
-    var pick, why;
-    if(amount > 0 && completable.length){
-      pick = completable[0];
-      why = '허들까지 ' + won(pick.stats.gapMin) + ' 남았는데, 이 금액이면 정확히 채울 수 있어요.';
-    } else {
-      var sorted = needy.slice().sort(function(a,b){ return a.stats.gapMin - b.stats.gapMin; });
-      pick = sorted[0];
-      why = amount > 0
-        ? '이 금액으로는 완전히 채우진 못하지만, 허들까지 가장 가까운 카드예요. (' + won(pick.stats.gapMin) + ' 남음)'
-        : '허들까지 가장 가까운 카드예요. (' + won(pick.stats.gapMin) + ' 남음)';
-    }
-    var rows = needy.slice().sort(function(a,b){ return a.stats.gapMin - b.stats.gapMin; }).map(function(x){
-      return '<div class="reco-list-row"><span>' + escapeHtml(x.card.name) + '</span><b>' + won(x.stats.gapMin) + ' 부족</b></div>';
-    }).join('');
-    resultEl.innerHTML =
-      '<div class="reco-pick"><span class="pill ' + pick.stats.status + '"></span>' +
-        '<div><div class="name">' + escapeHtml(pick.card.name) + '</div><div class="why">' + why + '</div></div>' +
-      '</div>' +
-      (needy.length > 1 ? '<div class="reco-list">' + rows + '</div>' : '');
-  }
-
   function escapeHtml(s){
     return String(s==null?'':s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
@@ -665,6 +541,7 @@
     var stats = computeStats(record);
     var payments = (record.recurringPayments||[]).slice().sort(function(a,b){ return (a.day||0)-(b.day||0); });
     var gapText = stats.status==='achieved' ? '달성 완료' : (won(stats.gapMin) + ' 부족');
+    var expanded = !!expandedPayments[card.id];
 
     var rowsHtml = payments.map(function(p, i){
       // need original index for writes; find in unsorted array
@@ -692,8 +569,16 @@
         '<div class="bar-labels"><span>0</span><span class="gap ' + stats.status + '">' + gapText + '</span><span>허들 ' + won(stats.hurdle) + '</span></div>' +
       '</div>' +
       '<div class="payments">' +
-        '<div class="payments-head"><span>정기결제 (' + payments.length + ')</span><button class="add-payment" data-cardid="' + card.id + '">+ 추가</button></div>' +
-        rowsHtml +
+        '<button type="button" class="payments-toggle" data-cardid="' + card.id + '">' +
+          '<span>정기결제 (' + payments.length + ')</span>' +
+          '<span class="toggle-caret">' + (expanded ? '접기 ▲' : '자세히보기 ▾') + '</span>' +
+        '</button>' +
+        (expanded ?
+          '<div class="payments-body">' +
+            '<div class="payments-actions"><button class="add-payment" data-cardid="' + card.id + '">+ 추가</button></div>' +
+            rowsHtml +
+          '</div>'
+        : '') +
       '</div>' +
     '</div>';
   }
@@ -747,6 +632,13 @@
     document.querySelectorAll('.add-payment').forEach(function(btn){
       btn.addEventListener('click', function(){ addPayment(btn.getAttribute('data-cardid')); });
     });
+    document.querySelectorAll('.payments-toggle').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-cardid');
+        expandedPayments[id] = !expandedPayments[id];
+        renderGrid();
+      });
+    });
     var addCardBtn = document.getElementById('add-card-btn');
     if(addCardBtn){ addCardBtn.addEventListener('click', promptAddCard); }
 
@@ -777,36 +669,9 @@
     });
   }
 
-  function renderSummary(){
-    var el = document.getElementById('summary-list');
-    var list = activeCards().map(function(c){
-      return {card:c, stats: computeStats(recordsData[c.id])};
-    });
-    if(list.length === 0){
-      el.innerHTML = '<div class="summary-empty">아직 등록된 카드가 없어요.</div>';
-      return;
-    }
-    var rank = {short:0, likely:1, achieved:2};
-    list.sort(function(a, b){
-      var ra = rank[a.stats.status], rb = rank[b.stats.status];
-      if(ra !== rb) return ra - rb;
-      return b.stats.gapMin - a.stats.gapMin;
-    });
-    el.innerHTML = list.map(function(x){
-      var gapText = x.stats.status === 'achieved' ? '달성 완료' : (won(x.stats.gapMin) + ' 부족');
-      return '<div class="summary-row">' +
-        '<div class="summary-name">' + escapeHtml(x.card.name) + '</div>' +
-        '<div class="summary-bar"><div class="bar">' + barSegmentsHtml(x.stats) + '</div></div>' +
-        '<div class="summary-status ' + x.stats.status + '">' + gapText + '</div>' +
-      '</div>';
-    }).join('');
-  }
-
   function renderAll(){
     renderMonthBar();
-    renderSummary();
     renderGrid();
-    renderReco();
   }
 
   // ---------- data ops ----------
@@ -887,8 +752,6 @@
     currentMonth = monthId;
     if(unsubRecords) unsubRecords();
     recordsData = {};
-    document.getElementById('reco-result').innerHTML = '';
-    delete document.getElementById('reco-amount').dataset.lastRun;
     subscribeRecords();
     renderAll();
   }
@@ -1003,13 +866,6 @@
 
   function init(){
     setupPullToRefresh();
-    document.getElementById('reco-btn').addEventListener('click', function(){
-      runReco(parseMoney(document.getElementById('reco-amount')));
-    });
-    document.getElementById('reco-amount').addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){ runReco(parseMoney(e.target)); }
-    });
-    attachMoneyInputs(document);
     document.getElementById('archived-toggle').addEventListener('click', function(){
       showArchived = !showArchived; renderArchivedList();
     });

@@ -191,17 +191,12 @@
     background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 4px,transparent 4px,transparent 8px);
     border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);
   }
-  .bar .fill-range.needs-confirm{
-    background:repeating-linear-gradient(45deg,var(--warn-soft),var(--warn-soft) 4px,transparent 4px,transparent 8px);
-    border-top:1px solid var(--warn);border-bottom:1px solid var(--warn);
-  }
   .bar .marker{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);}
   .bar-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);margin-top:6px;font-variant-numeric:tabular-nums;}
   .bar-labels .gap{font-weight:700;}
   .bar-labels .gap.short{color:var(--danger);}
   .bar-labels .gap.likely{color:var(--warn);}
   .bar-labels .gap.achieved{color:var(--good);}
-  .confirm-flag{font-size:11px;color:var(--warn);margin-top:5px;}
 
   .payments{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
   .payments-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -219,11 +214,6 @@
   .prow .del{background:none;border:none;color:var(--ink-soft);font-size:15px;line-height:1;padding:2px;}
   .prow .del:hover{color:var(--danger);}
   .prow .points-note{grid-column:2/5;font-size:11px;color:var(--ink-soft);font-style:normal;margin:-2px 0 4px;}
-  .confirm-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);margin:-2px 0 8px;}
-  .confirm-row input{width:130px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--ink);font-size:12px;font-variant-numeric:tabular-nums;}
-  .confirm-row .hint{font-size:11px;}
-  .confirm-row.need-confirm{color:var(--warn);}
-  .confirm-row.need-confirm input{border-color:var(--warn);}
 
   .archived-toggle{
     margin-top:26px;background:none;border:none;color:var(--ink-soft);font-size:13px;
@@ -291,34 +281,22 @@
 
   function computeStats(record){
     var payments = (record && record.recurringPayments) || [];
-    var sumFixed = 0, sumMin = 0, sumMax = 0; // 아직 집행되지 않은 예정 금액
-    var executed = 0; // 집행 완료 + 금액 확정(고정, 또는 확정액 입력된 변동)
-    var executedEst = 0; // 집행 완료했지만 변동 금액이 아직 미확정 -> 평균으로 추정
-    var unconfirmed = []; // 확정 금액 입력이 필요한 항목명
+    var sumFixed = 0, sumMin = 0, sumMax = 0; // 아직 결제일이 지나지 않은(미집행) 예정 금액만 집계
     payments.forEach(function(p){
       if(p.amountType === 'points') return;
-      var due = isPastDue(p.day||1);
-      if(p.amountType === 'range'){
-        if(due){
-          if(p.confirmed != null){ executed += Number(p.confirmed)||0; }
-          else { executedEst += ((p.min||0)+(p.max||0))/2; unconfirmed.push(p.label || '변동 항목'); }
-        } else {
-          sumMin += (p.min||0); sumMax += (p.max||0);
-        }
-      } else {
-        if(due){ executed += (p.amount||0); } else { sumFixed += (p.amount||0); }
-      }
+      // 결제일이 이미 지난 건은 카드앱에서 확인한 "현재 실적"에 이미 반영돼 있다고 보고 제외
+      if(isPastDue(p.day||1)) return;
+      if(p.amountType === 'range'){ sumMin += (p.min||0); sumMax += (p.max||0); }
+      else { sumFixed += (p.amount||0); }
     });
-    var manualPerf = (record && record.currentPerformance) || 0;
-    var effectivePerf = manualPerf + executed + executedEst; // 정기결제 집행분을 반영해 재계산한 오늘 기준 실적
+    var base = (record && record.currentPerformance) || 0;
     var hurdle = (record && record.hurdleAmount) || 0;
-    var projectedMin = effectivePerf + sumFixed + sumMin;
-    var projectedMax = effectivePerf + sumFixed + sumMax;
+    var projectedMin = base + sumFixed + sumMin;
+    var projectedMax = base + sumFixed + sumMax;
     var gapMin = Math.max(hurdle - projectedMin, 0);
     var gapAtMax = Math.max(hurdle - projectedMax, 0);
     var status = gapMin <= 0 ? 'achieved' : (gapAtMax <= 0 ? 'likely' : 'short');
-    return {manualPerf:manualPerf, executed:executed, executedEst:executedEst, unconfirmed:unconfirmed,
-      base:effectivePerf, hurdle:hurdle, sumFixed:sumFixed, sumMin:sumMin, sumMax:sumMax,
+    return {base:base, hurdle:hurdle, sumFixed:sumFixed, sumMin:sumMin, sumMax:sumMax,
       projectedMin:projectedMin, projectedMax:projectedMax, gapMin:gapMin, gapAtMax:gapAtMax, status:status};
   }
 
@@ -434,20 +412,11 @@
   function barSegmentsHtml(stats){
     var scaleMax = Math.max(stats.hurdle, stats.projectedMax, 1);
     var pct = function(v){ return Math.min(100, (v/scaleMax)*100); };
-    var b0 = stats.manualPerf;
-    var b1 = b0 + stats.executed;
-    var b2 = b1 + stats.executedEst;
-    var solidEnd = b2 + stats.sumFixed;
+    var solidEnd = stats.base + stats.sumFixed;
     var html = '';
-    html += '<div class="fill" style="width:' + pct(b0) + '%"></div>';
-    if(stats.executed > 0){
-      html += '<div class="fill-range" style="left:' + pct(b0) + '%;width:' + (pct(b1)-pct(b0)) + '%;background:var(--accent);border:none;"></div>';
-    }
-    if(stats.executedEst > 0){
-      html += '<div class="fill-range needs-confirm" style="left:' + pct(b1) + '%;width:' + (pct(b2)-pct(b1)) + '%;"></div>';
-    }
+    html += '<div class="fill" style="width:' + pct(stats.base) + '%"></div>';
     if(stats.sumFixed > 0){
-      html += '<div class="fill-range" style="left:' + pct(b2) + '%;width:' + (pct(solidEnd)-pct(b2)) + '%;background:var(--accent);border:none;"></div>';
+      html += '<div class="fill-range" style="left:' + pct(stats.base) + '%;width:' + (pct(solidEnd)-pct(stats.base)) + '%;background:var(--accent);border:none;"></div>';
     }
     if(stats.sumMax > stats.sumMin || stats.sumMin > 0){
       html += '<div class="fill-range" style="left:' + pct(solidEnd) + '%;width:' + (pct(solidEnd+stats.sumMax)-pct(solidEnd)) + '%;"></div>';
@@ -478,22 +447,13 @@
     }
     var note = p.amountType === 'points' && p.note
       ? '<div class="prow points-note">' + escapeHtml(p.note) + '</div>' : '';
-    var confirmRow = '';
-    if(p.amountType === 'range' && isPastDue(p.day||1)){
-      var hasConfirmed = p.confirmed != null;
-      confirmRow = '<div class="confirm-row' + (hasConfirmed ? '' : ' need-confirm') + '" data-idx="'+idx+'">' +
-        '<span>확정 금액</span>' +
-        '<input type="number" class="p-confirmed" data-idx="'+idx+'" value="'+(hasConfirmed?p.confirmed:'')+'" placeholder="청구 확정 후 입력" min="0" step="1000">' +
-        (hasConfirmed ? '' : '<span class="hint">청구서 확정 전까지 평균값으로 실적에 반영돼요</span>') +
-        '</div>';
-    }
     return '<div class="prow" data-idx="'+idx+'">' +
       '<input type="number" class="p-day" data-idx="'+idx+'" value="'+(p.day||1)+'" min="1" max="31">' +
       '<input type="text" class="p-label" data-idx="'+idx+'" value="'+escapeHtml(p.label||'')+'" placeholder="항목명">' +
       typeSel +
       amtHtml +
       '<button class="del" data-idx="'+idx+'" title="삭제">✕</button>' +
-      '</div>' + note + confirmRow;
+      '</div>' + note;
   }
 
   function cardHtml(card){
@@ -516,11 +476,10 @@
       '<span class="pill ' + stats.status + '">' + statusLabel(stats.status) + '</span>' +
       '<div class="fields-row" style="margin-top:14px;">' +
         '<div class="field"><label>허들 금액</label><div class="unit-input"><input type="number" class="hurdle-input" data-cardid="' + card.id + '" value="' + stats.hurdle + '" min="0" step="10000"><span>원</span></div></div>' +
-        '<div class="field"><label>현재 실적</label><div class="unit-input"><input type="number" class="perf-input" data-cardid="' + card.id + '" value="' + stats.manualPerf + '" min="0" step="1000"><span>원</span></div></div>' +
+        '<div class="field"><label>현재 실적</label><div class="unit-input"><input type="number" class="perf-input" data-cardid="' + card.id + '" value="' + stats.base + '" min="0" step="1000"><span>원</span></div></div>' +
       '</div>' +
       '<div class="bar-wrap"><div class="bar">' + barSegmentsHtml(stats) + '</div>' +
-        '<div class="bar-labels"><span>오늘 기준 ' + won(stats.base) + '</span><span class="gap ' + stats.status + '">' + gapText + '</span><span>허들 ' + won(stats.hurdle) + '</span></div>' +
-        (stats.unconfirmed.length ? '<div class="confirm-flag">확정 금액 필요: ' + escapeHtml(stats.unconfirmed.join(', ')) + '</div>' : '') +
+        '<div class="bar-labels"><span>0</span><span class="gap ' + stats.status + '">' + gapText + '</span><span>허들 ' + won(stats.hurdle) + '</span></div>' +
       '</div>' +
       '<div class="payments">' +
         '<div class="payments-head"><span>정기결제 (' + payments.length + ')</span><button class="add-payment" data-cardid="' + card.id + '">+ 추가</button></div>' +
@@ -594,11 +553,6 @@
       });
       cardEl.querySelectorAll('.p-max').forEach(function(el){
         el.addEventListener('change', function(){ updatePaymentField(cardId, +el.dataset.idx, 'max', Number(el.value)||0); });
-      });
-      cardEl.querySelectorAll('.p-confirmed').forEach(function(el){
-        el.addEventListener('change', function(){
-          updatePaymentField(cardId, +el.dataset.idx, 'confirmed', el.value === '' ? null : (Number(el.value)||0));
-        });
       });
       cardEl.querySelectorAll('.del').forEach(function(el){
         el.addEventListener('click', function(){ removePayment(cardId, +el.dataset.idx); });
@@ -677,11 +631,7 @@
       var jobs = activeCards().map(function(c){
         var src = source ? recordsData[c.id] : null;
         var newRec = src
-          ? {hurdleAmount: src.hurdleAmount||0, currentPerformance: 0, recurringPayments: (src.recurringPayments||[]).map(function(p){
-              var c = Object.assign({}, p);
-              delete c.confirmed; // 확정 금액은 달마다 새로 입력
-              return c;
-            })}
+          ? {hurdleAmount: src.hurdleAmount||0, currentPerformance: 0, recurringPayments: (src.recurringPayments||[]).map(function(p){ return Object.assign({}, p); })}
           : {hurdleAmount: 0, currentPerformance: 0, recurringPayments: []};
         return db.doc('months/' + monthId + '/records/' + c.id).set(newRec);
       });

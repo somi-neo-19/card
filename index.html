@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>카드 허들 대시보드</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -216,7 +221,7 @@
   .prow .amt input{min-width:0;}
   .prow .del{background:none;border:none;color:var(--ink-soft);font-size:15px;line-height:1;padding:2px;}
   .prow .del:hover{color:var(--danger);}
-  .prow .points-note{grid-column:2/5;font-size:11px;color:var(--ink-soft);font-style:normal;margin:-2px 0 4px;}
+  .points-note{font-size:11px;color:var(--ink-soft);font-style:normal;margin:-2px 0 8px;padding-left:50px;}
 
   .archived-toggle{
     margin-top:26px;background:none;border:none;color:var(--ink-soft);font-size:13px;
@@ -231,7 +236,48 @@
   .archived-chip button{background:none;border:none;color:var(--accent);font-size:12px;text-decoration:underline;padding:0;}
 
   .empty{color:var(--ink-soft);font-size:14px;padding:30px 0;text-align:center;}
+
+  /* 모바일 화면: 카드 한 줄에 1개씩, 전체적으로 글씨를 조금 더 크게 */
+  @media (max-width: 640px){
+    body{padding:20px 14px 60px;}
+    header.top .sub{font-size:14px;}
+    .banner{font-size:15px;}
+    .addmonth-form{font-size:14px;}
+    .reco .hint{font-size:14px;}
+    .reco-row input[type="number"]{font-size:16px;}
+    .reco-row button{font-size:15px;}
+    .reco-pick .name{font-size:17px;}
+    .reco-pick .why{font-size:14px;}
+    .reco-list{font-size:14px;}
+    .reco-empty{font-size:15px;}
+
+    .grid{grid-template-columns:1fr;gap:16px;}
+    .card{padding:16px 16px 14px;}
+    .card-head h3{font-size:20px;}
+    .archive-btn{font-size:13px;}
+    .pill{font-size:13.5px;padding:5px 12px;}
+
+    .field label{font-size:12.5px;}
+    .field .unit-input input{font-size:17px;}
+    .field .unit-input span{font-size:14px;}
+
+    .bar-labels{font-size:13px;}
+
+    .payments-head span{font-size:13px;}
+    .add-payment{font-size:13px;}
+    .prow{grid-template-columns:40px 1fr 62px 1fr 22px;gap:5px;}
+    .prow input[type="text"],.prow input[type="number"],.prow select{font-size:13.5px;padding:7px 6px;}
+    .prow .del{font-size:17px;}
+    .points-note{font-size:12.5px;}
+
+    .archived-toggle{font-size:14px;}
+    .archived-chip{font-size:13.5px;}
+    .archived-chip button{font-size:13px;}
+    .empty{font-size:15px;}
+  }
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header class="top">
@@ -268,12 +314,12 @@
   // 아래 중괄호 안에 그대로 붙여넣으세요. (자세한 방법은 FIREBASE_SETUP.md 참고)
   // ============================================================
   var firebaseConfig = {
-    apiKey: "AIzaSyAWcUVOmTx3en_spvGcgfLEY4I7MumcxPQ",
-    authDomain: "card-9c857.firebaseapp.com",
-    projectId: "card-9c857",
-    storageBucket: "card-9c857.firebasestorage.app",
-    messagingSenderId: "486812990457",
-    appId: "1:486812990457:web:f706ebf5ca33a462429b28"
+    apiKey: "여기에 apiKey 값을 붙여넣으세요",
+    authDomain: "여기에 authDomain 값을 붙여넣으세요",
+    projectId: "여기에 projectId 값을 붙여넣으세요",
+    storageBucket: "여기에 storageBucket 값을 붙여넣으세요",
+    messagingSenderId: "여기에 messagingSenderId 값을 붙여넣으세요",
+    appId: "여기에 appId 값을 붙여넣으세요"
   };
   // ============================================================
 
@@ -464,7 +510,7 @@
       amtHtml = '<input type="number" class="p-amount" data-idx="'+idx+'" value="'+(p.amount||0)+'" min="0" step="100">';
     }
     var note = p.amountType === 'points' && p.note
-      ? '<div class="prow points-note">' + escapeHtml(p.note) + '</div>' : '';
+      ? '<div class="points-note">' + escapeHtml(p.note) + '</div>' : '';
     return '<div class="prow" data-idx="'+idx+'">' +
       '<input type="number" class="p-day" data-idx="'+idx+'" value="'+(p.day||1)+'" min="1" max="31">' +
       '<input type="text" class="p-label" data-idx="'+idx+'" value="'+escapeHtml(p.label||'')+'" placeholder="항목명">' +
@@ -775,3 +821,5 @@
   init();
 })();
 </script>
+</body>
+</html>
